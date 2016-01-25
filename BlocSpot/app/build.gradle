@@ -21,15 +21,28 @@ android {
 
 
 ext {
-    supportLibVersion = "23.1.1"  // variable that can be referenced to keep support libs consistent
+    supportLibVersion = "23.1.1"    // general google support libraries
+    playServiceLibVersion = "8.4.0" // Play service support libraries
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
+
+    // Google Support Library and Design
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.android.support:design:23.1.1'
     //compile 'com.android.support:recyclerview-v7:${supportLibVersion}'
     // compile 'com.android.support:cardview-v7:${supportLibVersion}'
-    //
+
+
+    // Google Play Services
+    compile 'com.google.android.gms:play-services:8.4.0'
+    compile 'com.google.android.gms:play-services-maps:8.4.0'
+    compile 'com.google.android.gms:play-services-location:8.4.0'
+    compile 'com.google.android.gms:play-services-identity:8.4.0'
+
+
+    // REALM Database
+    compile 'io.realm:realm-android:0.87.2'
 }
