@@ -9,8 +9,11 @@ import io.realm.annotations.PrimaryKey;
 public class PointOfInterestModel extends RealmObject {
 
     @PrimaryKey
+    private String placeAddress; // no address will be the same  or use long/lat
+
+    private String id;
     private String placeName;
-    private String placeAddress;
+
 
 //    public PointOfInterestModel(String placeName, String placeAddr) {
 //        this.placeName = placeName;
@@ -32,5 +35,11 @@ public class PointOfInterestModel extends RealmObject {
 
     public void setPlaceAddress (String placeAddr) {
         this.placeAddress = placeAddr;
+    }
+
+    public String getId() { return id; }
+
+    public void setId( String id ) {
+        this.id = id;
     }
 }
