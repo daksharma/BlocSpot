@@ -2,6 +2,12 @@
 <manifest package="com.daksharma.android.blocspot"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
+
+    <!-- Permissions  -->
+    <permission android:name="com.daksharma.android.blocspot.permission.MAPS_RECEIVE"
+                android:protectionLevel="signature"/>
+
+    <uses-permission android:name="com.daksharma.android.blocspot.permission.MAPS_RECEIVE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -9,6 +15,13 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+
+    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES"/>
+
+    <!-- OPEN GL Feature -->
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true"/>
 
 
     <application
@@ -29,6 +42,10 @@
 
         <meta-data android:name="com.google.android.maps.v2.API_KEY"
             android:value="AIzaSyBsILRzH3wMX_Jl6oET9eIlUIEFeIzxmMI"/>
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
     </application>
 
 </manifest>

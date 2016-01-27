@@ -1,11 +1,14 @@
 package com.daksharma.android.blocspot;
 
+import android.app.Dialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.daksharma.android.blocspot.model.PointOfInterestModel;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.maps.GoogleMap;
 
 import io.realm.Realm;
@@ -15,7 +18,9 @@ import io.realm.RealmResults;
 public class BlocSpotMainActivity extends AppCompatActivity {
 
     private Realm realmObj;
-    GoogleMap mMap;
+    private GoogleMap mMap;
+
+    private static final int GPS_ERRORDIALOG_REQUEST = 0;
 
 
     @Override
@@ -63,4 +68,20 @@ public class BlocSpotMainActivity extends AppCompatActivity {
 
 
     }
+
+/*
+    public boolean servicesOK() {
+        int isAvailable = GoogleApiAvailability.isGooglePlayServicesAvailable(this);
+
+        if (isAvailable == ConnectionResult.SUCCESS) {
+            return true;
+        } else if (GoogleApiAvailability.isUserResolvableError(isAvailable)) {
+            Dialog dialog = GoogleApiAvailability.getErrorDialog(isAvailable, this, GPS_ERRORDIALOG_REQUEST);
+            dialog.show();
+        } else {
+            Toast.makeText(this, "Unable to connect to Google Play Services", Toast.LENGTH_SHORT).show();
+        }
+        return false;
+    }
+    */
 }
