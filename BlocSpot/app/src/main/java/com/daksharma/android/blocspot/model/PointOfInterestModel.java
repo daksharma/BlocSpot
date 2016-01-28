@@ -37,9 +37,11 @@ public class PointOfInterestModel extends RealmObject {
         this.placeAddress = placeAddr;
     }
 
-    public String getId() { return id; }
+    public String getId () {
+        return id;
+    }
 
-    public void setId( String id ) {
+    public void setId (String id) {
         this.id = id;
     }
 }
