@@ -8,6 +8,8 @@ import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.daksharma.android.blocspot.model.PointOfInterestModel;
@@ -34,10 +36,21 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
     private static final int GPS_ERRORDIALOG_REQUEST = 0;
 
 
+    private Menu menu;
+
     private Bitmap mapPinBitMap;
     private Bitmap redHeartBitMap;
     private Bitmap greenHeartBitMap;
     private Bitmap blueHeartBitMap;
+    private Bitmap listViewBtnIconBitMap;
+    private Bitmap searchIconBitMap;
+    private Bitmap filterIconBitMap;
+    private Bitmap ratingStarIconBitMap;
+    private Bitmap navigateBtnIconBitMap;
+    private Bitmap shareBtnIconBitMap;
+    private Bitmap deleteBtnIconBitMap;
+
+
 
 
     @Override
@@ -94,6 +107,11 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
     }
 
 
+    /**
+     *
+     * @param vectorDrawable
+     * @return
+     */
     public Bitmap convertBitMap (int vectorDrawable) {
         Bitmap   mapPin;
         Drawable mapPinDrawable = getResources().getDrawable(vectorDrawable);
@@ -108,11 +126,56 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
     }
 
     public void setConvertedBitMap () {
+
+        // Map Pins
         mapPinBitMap = convertBitMap(R.drawable.black_map_pin_full);
         redHeartBitMap = convertBitMap(R.drawable.red_like_heart);
         greenHeartBitMap = convertBitMap(R.drawable.green_like_heart);
         blueHeartBitMap = convertBitMap(R.drawable.blue_like_heart);
+
+        // Regular App Icon
+        /*
+        listViewBtnIconBitMap = convertBitMap(R.drawable.listview_icon_btn);
+        searchIconBitMap = convertBitMap(R.drawable.search_icon);
+        filterIconBitMap = convertBitMap(R.drawable.filter_tune_icon);
+        ratingStarIconBitMap = convertBitMap(R.drawable.rating_star_icon);
+        deleteBtnIconBitMap = convertBitMap(R.drawable.delete_btn_icon);
+        navigateBtnIconBitMap = convertBitMap(R.drawable.navigate_btn_icon);
+        shareBtnIconBitMap = convertBitMap(R.drawable.share_btn_icon);
+        */
     }
+
+
+    /**
+     *  ALL MENU OPTIONS HERE
+     * @param menu
+     * @return
+     */
+    @Override
+    public boolean onCreateOptionsMenu (Menu menu) {
+        getMenuInflater().inflate(R.menu.blocspot_menu, menu);
+        this.menu = menu;
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.list_item_btn:
+                Toast.makeText(BlocSpotMainActivity.this, "List View Clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.filter_item:
+                Toast.makeText(BlocSpotMainActivity.this, "Filter Button Clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.search_btn:
+                Toast.makeText(BlocSpotMainActivity.this, "Search Button Clicked", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+
 
     public void realmStuffTest () {
         PointOfInterestModel poiPlace = new PointOfInterestModel();

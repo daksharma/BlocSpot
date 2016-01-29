@@ -13,6 +13,7 @@ public class PointOfInterestModel extends RealmObject {
 
     private String id;
     private String placeName;
+    private String userNotes;
 
 
 //    public PointOfInterestModel(String placeName, String placeAddr) {
@@ -44,4 +45,14 @@ public class PointOfInterestModel extends RealmObject {
     public void setId (String id) {
         this.id = id;
     }
+
+    public String getUserNotes() {
+        return userNotes;
+    }
+
+    public void setUserNotes(String notes) {
+        this.userNotes = notes;
+    }
+
+
 }

@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">BlocSpot</string>
+
+
+    <string name="share">Share</string>
+    <string name="navigate_to">Navigate</string>
+    <string name="delete_item">Delete</string>
+
+    <string name="visited_place">Visited</string>
+    <string name="not_yet_visited">Not Visited</string>
+
+
+
+
+    <!-- Navigation Text -->
+    <string name="menu_list_view">List View</string>
+    <string name="menu_filter">Filter</string>
+    <string name="menu_search">Search</string>
+
+
+
+
 </resources>
