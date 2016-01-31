@@ -1,5 +1,7 @@
 package com.daksharma.android.blocspot;
 
+import android.*;
+import android.Manifest;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.IntentSender;
@@ -44,10 +46,10 @@ import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
 public class BlocSpotMainActivity extends FragmentActivity implements OnMapReadyCallback,
-                                                                       GoogleApiClient.ConnectionCallbacks,
-                                                                       GoogleApiClient.OnConnectionFailedListener,
-                                                                       LocationListener,
-                                                                       ActivityCompat.OnRequestPermissionsResultCallback {
+                                                                      GoogleApiClient.ConnectionCallbacks,
+                                                                      GoogleApiClient.OnConnectionFailedListener,
+                                                                      LocationListener,
+                                                                      ActivityCompat.OnRequestPermissionsResultCallback {
 
     public final static String TAG = "com.daksharma.blocspot: " + BlocSpotMainActivity.class.getSimpleName()
                                                                                             .toUpperCase();
@@ -68,6 +70,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
 
     private static final int GPS_ERRORDIALOG_REQUEST = 0;
     private static final int REQUEST_LOCATION_CODE   = 2;
+    private static final int REQUEST_STORAGE_CODE    = 3;
 
 
     private Menu menu;
@@ -83,7 +86,9 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bloc_spot_main);
 
+        requestPermissionOnLaunch();
         buildGoogleApiClient();
+
 
         mLocationRequest = LocationRequest.create()
                                           .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -159,16 +164,25 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
 
     @Override
     public void onConnected (Bundle connectionHint) {
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if ( (mLastLocation == null) && (mGoogleApiClient.isConnected()) && (ContextCompat.checkSelfPermission(this, "Manifest.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_GRANTED) ) {
-            Log.e(TAG, mLastLocation.toString());
-            Log.e(TAG, "mGoogleAPIclient Connected: " + mGoogleApiClient.isConnected());
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        if ( (mLastLocation == null) && (mGoogleApiClient.isConnected()) ) {
+            Log.e(TAG, "mGoogleApiClient Connected ? : " + mGoogleApiClient.isConnected());
+            try {
+                Log.e(TAG, "Requesting Location Services --- ");
+                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+                mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            } catch ( SecurityException sE ) {
+                Log.e(TAG, "Request Location Update --- Security Exception : ");
+                sE.printStackTrace();
+            }
         } else {
             handleNewLocation(mLastLocation);
         }
-        Log.e(TAG, "Services CONNECTED.");
-        Toast.makeText(this, "Service CONNECTED", Toast.LENGTH_SHORT).show();
+        try {
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        } catch ( SecurityException sE ) {
+            Log.e(TAG, "FAILED to get mLastLocation --- Security Exception : ");
+            sE.printStackTrace();
+        }
     }
 
     @Override
@@ -203,17 +217,25 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     @Override
     public void onRequestPermissionsResult (int requestCode,
                                             String[] permissions,
-                                            int[] grantResults) { // returns invalid array
+                                            int[] grantResults) { // returns invalid array the first time its asked
         switch ( requestCode ) {
             case REQUEST_LOCATION_CODE:
-                if ( (grantResults.length == 1) && grantResults[0] == PackageManager.PERMISSION_GRANTED ) {
+                if ( (permissions.length == 1) && (permissions[0] == android.Manifest.permission.ACCESS_FINE_LOCATION) && (grantResults[0] == PackageManager.PERMISSION_GRANTED) ) {
                     // Permission Granted
-                    mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-                    Log.e(TAG, "Permission Granted");
+                    try {
+                        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                        Log.e(TAG, "Permission Granted");
+                    } catch ( SecurityException sE ) {
+                        Log.e(TAG, "mLastLocation Security Exception : ");
+                        sE.printStackTrace();
+                    }
+
                 } else {
-                    // Permission Denied
                     Log.e(TAG, "Permission Denied");
                 }
+                break;
+            case REQUEST_STORAGE_CODE:
+                Log.e(TAG, "Request Storage Code Granted");
                 break;
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -228,39 +250,55 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         mMap.setIndoorEnabled(false);
         mMap.setTrafficEnabled(false);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
-        if ( ContextCompat.checkSelfPermission(this, "Manifest.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_GRANTED ) {
+        if ( ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
             mMap.setMyLocationEnabled(true);
         } else {
             // Show rationale and request permission.
-            Log.e(TAG, "On Map Ready: Request Location Service Permission");
-            showMessageOKCancel("Location Service Required",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick (DialogInterface dialog, int which) {
-                                        ActivityCompat.requestPermissions(BlocSpotMainActivity.this,
-                                                                          new String[]{"Manifest.permission.ACCESS_FINE_LOCATION"},
-                                                                          REQUEST_LOCATION_CODE);
-                                    }
-                                });
-
-
+            requestPermissionOnLaunch();
         }
 
 
         /* Check Permissions
-        if ( ContextCompat.checkSelfPermission(this, "Manifest.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED ) {
+        if ( ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
             // Should we show an explanation?
-            if ( ActivityCompat.shouldShowRequestPermissionRationale(this, "Manifest.permission.ACCESS_FINE_LOCATION") ) {
+            if ( ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ) {
 
                 // Show an expanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
             } else {
                 ActivityCompat.requestPermissions(this,
-                                                  new String[]{"Manifest.permission.ACCESS_FINE_LOCATION"},
+                                                  new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                                                   REQUEST_LOCATION_CODE);
             }
         }*/
+    }
+
+
+    protected void requestPermissionOnLaunch () {
+        if ( ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+             || (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) ) {
+
+            Log.e(TAG, "On Map Ready: Requesting Location Service Permission");
+            ActivityCompat.requestPermissions(BlocSpotMainActivity.this,
+                                              new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                                              REQUEST_LOCATION_CODE);
+        } else {
+            // Show rationale and request permission.
+            Log.e(TAG, "Location Permissions Not Requested");
+        }
+
+        if ( (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+             || (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) ) {
+
+            Log.e(TAG, "Requesting Storage Read/Write Permission");
+            ActivityCompat.requestPermissions(BlocSpotMainActivity.this,
+                                              new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                              REQUEST_STORAGE_CODE);
+        } else {
+            // Show rationale and request permission.
+            Log.e(TAG, "Storage Permissions Not Requested");
+        }
     }
 
     private void showMessageOKCancel (String message, DialogInterface.OnClickListener okListener) {
@@ -291,19 +329,17 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
             double currentLongitude = location.getLongitude();
             LatLng latLng = new LatLng(currentLatitude, currentLongitude);
             // default marker setting plus default icon setting from google maps
-            /*mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"))
-                .setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));*/
-            MarkerOptions options = new MarkerOptions().position(latLng)
-                                                       .title("Marker")
-                                                       .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-            mMap.addMarker(options);
+            mMap.addMarker(new MarkerOptions().position(latLng).title("Current Location"))
+                .setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
 
             // Move the camera to Device Location (or last known location)
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULTZOOM));
+
         } else {
-            Log.e(TAG, "LOCATION NULL");
+            Log.e(TAG, "Deafult Location ( 0, 0 )");
             // default to ( 0, 0 ) lat long location
-            mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker")).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+            mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Default Location"))
+                .setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         }
     }
 
