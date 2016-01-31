@@ -83,6 +83,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     private Bitmap blueHeartBitMap;
 
     private Marker mDefaultMarker;
+    private Marker mDefaultZeroMarker;
 
 
     @Override
@@ -96,8 +97,8 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
 
         mLocationRequest = LocationRequest.create()
                                           .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                                          .setInterval(20 * 1000)   // 20 seconds
-                                          .setFastestInterval(5000); // 5 seconds
+                .setInterval(20 * 1000)   // 20 seconds
+                .setFastestInterval(2000); // 2 seconds
 
         setConvertedBitMap();
 
@@ -314,9 +315,14 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     @Override
     public void onLocationChanged (Location location) {
         if ( location != null && mLastLocation != null && mDefaultMarker != null ) {
-            Log.e(TAG, "Location Compare: \nmLastLocation:\t" + mLastLocation.toString() + " \nmNewwLocation:\t" + location.toString());
+            Log.e(TAG, "Location Compare: \nmLastLocation:\t" + mLastLocation.toString()
+                       + " \nmNewwLocation:\t" + location.toString());
             mDefaultMarker.remove();
             Log.e(TAG, "mDefaultMarker Removed");
+            if ( mDefaultZeroMarker != null ) {
+                mDefaultZeroMarker.remove();
+                Log.e(TAG, "mDefault_Zero_Marker Removed");
+            }
         }
         handleNewLocation(location);
     }
@@ -336,10 +342,12 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULTZOOM));
 
         } else {
-            Log.e(TAG, "Deafult Location ( 0, 0 )");
+            /*Log.e(TAG, "Deafult Location ( 0, 0 )");
             // default to ( 0, 0 ) lat long location
-            mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Default Location"))
-                .setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+            mDefaultZeroMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0))
+                                                                   .title("Default Location")
+                                                                   .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+            Log.e(TAG, "mDeafult_Zero_Marker Added");*/
         }
     }
 
