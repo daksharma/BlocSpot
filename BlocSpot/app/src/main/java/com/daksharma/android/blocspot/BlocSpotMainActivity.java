@@ -10,9 +10,9 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -20,19 +20,20 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.daksharma.android.blocspot.model.PointOfInterestModel;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -42,13 +43,14 @@ import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
-public class BlocSpotMainActivity extends AppCompatActivity implements OnMapReadyCallback,
+public class BlocSpotMainActivity extends FragmentActivity implements OnMapReadyCallback,
                                                                        GoogleApiClient.ConnectionCallbacks,
                                                                        GoogleApiClient.OnConnectionFailedListener,
                                                                        LocationListener,
                                                                        ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public final static String TAG = "blocspot." + BlocSpotMainActivity.class.getSimpleName().toUpperCase();
+    public final static String TAG = "com.daksharma.blocspot: " + BlocSpotMainActivity.class.getSimpleName()
+                                                                                            .toUpperCase();
 
 
     private Realm realmObj;
@@ -62,10 +64,10 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
 
 
     private MapFragment mMapFragment;
+    private static final float DEFAULTZOOM = 15;
 
     private static final int GPS_ERRORDIALOG_REQUEST = 0;
     private static final int REQUEST_LOCATION_CODE   = 2;
-    //private final        int locationPermissionCode  = ContextCompat.checkSelfPermission(this, "Manifest.permission.ACCESS_FINE_LOCATION");
 
 
     private Menu menu;
@@ -74,13 +76,6 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
     private Bitmap redHeartBitMap;
     private Bitmap greenHeartBitMap;
     private Bitmap blueHeartBitMap;
-    private Bitmap listViewBtnIconBitMap;
-    private Bitmap searchIconBitMap;
-    private Bitmap filterIconBitMap;
-    private Bitmap ratingStarIconBitMap;
-    private Bitmap navigateBtnIconBitMap;
-    private Bitmap shareBtnIconBitMap;
-    private Bitmap deleteBtnIconBitMap;
 
 
     @Override
@@ -88,10 +83,8 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bloc_spot_main);
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this).addConnectionCallbacks(this)
-                                                            .addOnConnectionFailedListener(this)
-                                                            .addApi(LocationServices.API)
-                                                            .build();
+        buildGoogleApiClient();
+
         mLocationRequest = LocationRequest.create()
                                           .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                                           .setInterval(10 * 1000)
@@ -102,22 +95,36 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
             setUpMapIfNeeded();
         }
 
+
         RealmConfiguration config = new RealmConfiguration.Builder(this).build();
         Realm.setDefaultConfiguration(config);
-
         realmStuffTest();
 
     }
 
+    /*******************
+     * GOOGLE API CLIENT
+     ********************/
+    protected synchronized void buildGoogleApiClient () {
+        mGoogleApiClient = new GoogleApiClient.Builder(this).addApi(LocationServices.API)
+                                                            .addApi(Places.GEO_DATA_API)
+                                                            .addApi(Places.PLACE_DETECTION_API)
+                                                            .addConnectionCallbacks(this)
+                                                            .addOnConnectionFailedListener(this)
+                                                            .build();
+        mGoogleApiClient.connect();
+    }
+
+
     @Override
     protected void onResume () {
         super.onResume();
-        if (mMap == null ) {
+        if ( mMap == null ) {
             setUpMapIfNeeded();
         }
         MapStateManager msManager = new MapStateManager(this);
-        CameraPosition position = msManager.getSavedCameraPosition();
-        if (position != null && mMap != null) {
+        CameraPosition  position  = msManager.getSavedCameraPosition();
+        if ( position != null && mMap != null ) {
             CameraUpdate camUpdate = CameraUpdateFactory.newCameraPosition(position);
             mMap.moveCamera(camUpdate);
         }
@@ -128,7 +135,6 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
     @Override
     protected void onPause () {
         super.onPause();
-
         if ( mGoogleApiClient.isConnected() ) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
             mGoogleApiClient.disconnect();
@@ -136,10 +142,14 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onStop () {
         MapStateManager msManager = new MapStateManager(this);
         msManager.saveMapState(mMap);
+        if ( (mGoogleApiClient != null) && (mGoogleApiClient.isConnected()) ) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            mGoogleApiClient.disconnect();
+        }
+        super.onStop();
     }
 
     @Override
@@ -191,7 +201,9 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
     }
 
     @Override
-    public void onRequestPermissionsResult (int requestCode, String[] permissions, int[] grantResults) { // returns invalid array
+    public void onRequestPermissionsResult (int requestCode,
+                                            String[] permissions,
+                                            int[] grantResults) { // returns invalid array
         switch ( requestCode ) {
             case REQUEST_LOCATION_CODE:
                 if ( (grantResults.length == 1) && grantResults[0] == PackageManager.PERMISSION_GRANTED ) {
@@ -215,6 +227,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.setIndoorEnabled(false);
         mMap.setTrafficEnabled(false);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
         if ( ContextCompat.checkSelfPermission(this, "Manifest.permission.ACCESS_FINE_LOCATION") == PackageManager.PERMISSION_GRANTED ) {
             mMap.setMyLocationEnabled(true);
         } else {
@@ -227,32 +240,17 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
                                         ActivityCompat.requestPermissions(BlocSpotMainActivity.this,
                                                                           new String[]{"Manifest.permission.ACCESS_FINE_LOCATION"},
                                                                           REQUEST_LOCATION_CODE);
-
-
                                     }
                                 });
-            //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker")); // default works
-            if ( mLastLocation != null )
 
-            {
-                mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
-                                                  .title("Current Location")
-                                                  .icon(BitmapDescriptorFactory.fromBitmap(redHeartBitMap)));
-            } else
 
-            {
-                mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0))
-                                                  .title("Default Location")
-                                                  .icon(BitmapDescriptorFactory.fromBitmap(redHeartBitMap)));
-            }
         }
 
 
-
-        // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(this, "Manifest.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED) {
+        /* Check Permissions
+        if ( ContextCompat.checkSelfPermission(this, "Manifest.permission.ACCESS_FINE_LOCATION") != PackageManager.PERMISSION_GRANTED ) {
             // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, "Manifest.permission.ACCESS_FINE_LOCATION")) {
+            if ( ActivityCompat.shouldShowRequestPermissionRationale(this, "Manifest.permission.ACCESS_FINE_LOCATION") ) {
 
                 // Show an expanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
@@ -262,18 +260,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
                                                   new String[]{"Manifest.permission.ACCESS_FINE_LOCATION"},
                                                   REQUEST_LOCATION_CODE);
             }
-        }
-
-
-
-
-
-
-
-
-
-
-
+        }*/
     }
 
     private void showMessageOKCancel (String message, DialogInterface.OnClickListener okListener) {
@@ -303,15 +290,20 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
             double currentLatitude = location.getLatitude();
             double currentLongitude = location.getLongitude();
             LatLng latLng = new LatLng(currentLatitude, currentLongitude);
-            //mMap.addMarker(new MarkerOptions().position(new LatLng(currentLatitude, currentLongitude)).title("Current Location"));
+            // default marker setting plus default icon setting from google maps
+            /*mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"))
+                .setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));*/
             MarkerOptions options = new MarkerOptions().position(latLng)
-                                                       .title("I am here!");
+                                                       .title("Marker")
+                                                       .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             mMap.addMarker(options);
 
             // Move the camera to Device Location (or last known location)
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULTZOOM));
         } else {
             Log.e(TAG, "LOCATION NULL");
+            // default to ( 0, 0 ) lat long location
+            mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker")).setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         }
     }
 

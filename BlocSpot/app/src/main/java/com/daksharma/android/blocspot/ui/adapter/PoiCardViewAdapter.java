@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class PoiCardViewAdapter extends RecyclerView.Adapter<PoiCardViewAdapter.PoiCardsViewHolder> {
 
-    public final static String TAG = "com.daksharma.android.blocspot.PoiCardViewAdapter";
+    public final static String TAG = "com.daksharma.blocspot: " + PoiCardsViewHolder.class.getSimpleName().toUpperCase();
 
     private List<PointOfInterestModel> poiData; // will contain the data for the poi items
 
@@ -53,7 +53,7 @@ public class PoiCardViewAdapter extends RecyclerView.Adapter<PoiCardViewAdapter.
 
     public class PoiCardsViewHolder extends RecyclerView.ViewHolder {
 
-        public final static String TAG = "com.daksharma.android.blocspot.PoiCardsViewHolder";
+        public final String TAG = "com.daksharma.blocspot: " + PoiCardsViewHolder.class.getSimpleName().toUpperCase();
 
         protected ImageView locationStreetIv;
         protected TextView  locationNameTv;

@@ -10,6 +10,7 @@
         android:protectionLevel="signature"/>
 
     <uses-permission android:name="com.daksharma.android.blocspot.permission.MAPS_RECEIVE"/>
+    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES"/>
 
     <uses-permission
         android:name="android.permission.INTERNET"
@@ -54,12 +55,6 @@
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="AIzaSyBsILRzH3wMX_Jl6oET9eIlUIEFeIzxmMI"/>
-
-        <!-- Google Places APi
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDdxN6C8N-zrSrGHa8Hs9VS5xiQ2WofpiY"/>
-            -->
 
 
         <!-- Google Play Service Version Number -->

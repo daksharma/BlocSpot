@@ -30,6 +30,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     // Google Support Library and Design
+    compile "com.android.support:support-v4:${supportLibVersion}"
     compile "com.android.support:appcompat-v7:${supportLibVersion}"
     compile "com.android.support:design:${supportLibVersion}"
     compile "com.android.support:recyclerview-v7:${supportLibVersion}"
