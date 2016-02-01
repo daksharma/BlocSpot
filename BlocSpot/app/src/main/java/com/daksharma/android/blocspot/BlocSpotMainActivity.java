@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.daksharma.android.blocspot.model.PointOfInterestModel;
@@ -86,6 +87,10 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     private Marker mDefaultZeroMarker;
 
 
+    private Button searchButton;
+    private Button listViewButton;
+    private Button filterButton;
+
     @Override
     protected void onCreate (Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,11 +99,6 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         requestPermissionOnLaunch();
         buildGoogleApiClient();
 
-
-        mLocationRequest = LocationRequest.create()
-                                          .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(20 * 1000)   // 20 seconds
-                .setFastestInterval(2000); // 2 seconds
 
         setConvertedBitMap();
 
@@ -210,6 +210,25 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         }
     }
 
+    private void initLocationUpdater () {
+        mLocationRequest = LocationRequest.create()
+                                          .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(20 * 1000)   // 20 seconds
+                .setFastestInterval(2000); // 2 seconds
+        if ( ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat
+                                                                                                                                                .checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            return;
+        }
+
+    }
     @Override
     public void onRequestPermissionsResult (int requestCode,
                                             String[] permissions,
@@ -218,6 +237,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
             case REQUEST_LOCATION_CODE:
                 if ( (permissions.length > 0) && (permissions[0] == android.Manifest.permission.ACCESS_FINE_LOCATION) && (grantResults[0] == PackageManager.PERMISSION_GRANTED) ) {
                     // Permission Granted
+                    initLocationUpdater();
                     requestLocationUpdateIfNeeded();
                 } else {
                     Log.e(TAG, "Permission Denied --- Failed To Request Location Permission");
@@ -236,7 +256,6 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     public void requestLocationUpdateIfNeeded () {
         try {
             if ( mLastLocation == null ) {
-                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
                 Log.e(TAG, "Location Request Update Processed ---");
                 mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
                 Log.e(TAG, "Location Request Update Succeeded ---");
@@ -258,6 +277,10 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
             ActivityCompat.requestPermissions(BlocSpotMainActivity.this,
                                               new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                                               REQUEST_LOCATION_CODE);
+            ActivityCompat.requestPermissions(BlocSpotMainActivity.this,
+                                              new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION},
+                                              REQUEST_LOCATION_CODE);
+
         } else {
             // Show rationale and request permission.
             Log.e(TAG, "Location Permissions Not Requested");
