@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
@@ -65,6 +66,9 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     private LocationRequest mLocationRequest;
     private Location        mLastLocation;
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+
+    private boolean gpsEnabled = false;
+    private boolean wifiEnabled = false;
 
 
     private MapFragment mMapFragment;
@@ -172,6 +176,12 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         if ( (connectionHint != null) && (mLastLocation == null) && (mGoogleApiClient.isConnected()) ) {
             Log.e(TAG, "mGoogleApiClient Connected ? : " + mGoogleApiClient.isConnected());
             Log.e(TAG, "Requesting Location Services --- ");
+
+            LocationManager userGpsEnabled = (LocationManager) getSystemService(this.LOCATION_SERVICE);
+            gpsEnabled = userGpsEnabled.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            wifiEnabled = userGpsEnabled.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            Log.e(TAG, "GPS_Enabled: " + gpsEnabled + "\nWifi_Enabled: " + wifiEnabled);
+
             requestPermissionOnLaunch();
             //requestLocationUpdateIfNeeded();
         } else if ( mLastLocation != null ) {
@@ -232,7 +242,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
             mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
             handleNewLocation(mLastLocation);
 
-            if ( servicesOK() ) {
+            if ( mLastLocation != null && servicesOK() ) {
                 LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
             }
 
@@ -306,9 +316,15 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         mMap.setTrafficEnabled(false);
         mMap.getUiSettings().setMyLocationButtonEnabled(true); // doesnt seem to be working ????
         try {
-            mMap.setMyLocationEnabled(true);
-            initLocationUpdater();
-            Log.e(TAG, "mMap.isMyLocationEnabled: " + mMap.isMyLocationEnabled());
+            // check if location is enabled based on wifi or gps
+            if ( gpsEnabled || wifiEnabled ) {
+                mMap.setMyLocationEnabled(true);
+                initLocationUpdater();
+                Log.e(TAG, "mMap.isMyLocationEnabled: " + mMap.isMyLocationEnabled());
+            } else {
+                Log.e(TAG, "Location NOT enabled");
+            }
+
         } catch ( SecurityException sE ) {
             Log.e(TAG, "mMap.setMyLocationEnabled: " + mMap.isMyLocationEnabled());
             sE.printStackTrace();
