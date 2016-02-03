@@ -10,7 +10,7 @@
         app:showAsAction="always"/>
 
     <item
-        android:id="@+id/filter_item"
+        android:id="@+id/filter_item_button"
         android:icon="@drawable/filter_tune_icon"
         android:orderInCategory="1"
         android:title="@string/menu_filter"

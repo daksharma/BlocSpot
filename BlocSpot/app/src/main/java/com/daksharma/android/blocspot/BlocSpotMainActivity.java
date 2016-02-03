@@ -1,9 +1,9 @@
 package com.daksharma.android.blocspot;
 
-import android.*;
 import android.Manifest;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
@@ -27,12 +27,17 @@ import com.daksharma.android.blocspot.model.PointOfInterestModel;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -54,8 +59,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
                                                                       LocationListener,
                                                                       ActivityCompat.OnRequestPermissionsResultCallback {
 
-    public final static String TAG = "com.daksharma.blocspot: " + BlocSpotMainActivity.class.getSimpleName()
-                                                                                            .toUpperCase();
+    public final static String TAG = BlocSpotMainActivity.class.getSimpleName().toUpperCase();
 
 
     private Realm realmObj;
@@ -67,7 +71,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     private Location        mLastLocation;
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
 
-    private boolean gpsEnabled = false;
+    private boolean gpsEnabled  = false;
     private boolean wifiEnabled = false;
 
 
@@ -78,6 +82,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     private static final int GPS_ERRORDIALOG_REQUEST = 0;
     private static final int REQUEST_LOCATION_CODE   = 2;
     private static final int REQUEST_STORAGE_CODE    = 3;
+    private static final int PLACE_PICKER_CODE       = 4;
 
 
     private Menu menu;
@@ -87,7 +92,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     private Bitmap greenHeartBitMap;
     private Bitmap blueHeartBitMap;
 
-    private Marker mDefaultMarker;
+    private Marker mUserLocationMarker;
     private Marker mDefaultZeroMarker;
 
 
@@ -99,6 +104,12 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     protected void onCreate (Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bloc_spot_main);
+
+        searchButton = ( Button ) findViewById(R.id.search_btn);
+        listViewButton = ( Button ) findViewById(R.id.list_item_btn);
+        filterButton = ( Button ) findViewById(R.id.filter_item_button);
+
+
 
         buildGoogleApiClient();
         setConvertedBitMap();
@@ -177,7 +188,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
             Log.e(TAG, "mGoogleApiClient Connected ? : " + mGoogleApiClient.isConnected());
             Log.e(TAG, "Requesting Location Services --- ");
 
-            LocationManager userGpsEnabled = (LocationManager) getSystemService(this.LOCATION_SERVICE);
+            LocationManager userGpsEnabled = ( LocationManager ) getSystemService(this.LOCATION_SERVICE);
             gpsEnabled = userGpsEnabled.isProviderEnabled(LocationManager.GPS_PROVIDER);
             wifiEnabled = userGpsEnabled.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
             Log.e(TAG, "GPS_Enabled: " + gpsEnabled + "\nWifi_Enabled: " + wifiEnabled);
@@ -314,17 +325,16 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.setIndoorEnabled(false);
         mMap.setTrafficEnabled(false);
-        mMap.getUiSettings().setMyLocationButtonEnabled(true); // doesnt seem to be working ????
         try {
             // check if location is enabled based on wifi or gps
             if ( gpsEnabled || wifiEnabled ) {
+                mMap.getUiSettings().setMyLocationButtonEnabled(true); // doesnt seem to be working ????
                 mMap.setMyLocationEnabled(true);
                 initLocationUpdater();
                 Log.e(TAG, "mMap.isMyLocationEnabled: " + mMap.isMyLocationEnabled());
             } else {
-                Log.e(TAG, "Location NOT enabled");
+                Log.e(TAG, "Location toggle is NOT Enabled");
             }
-
         } catch ( SecurityException sE ) {
             Log.e(TAG, "mMap.setMyLocationEnabled: " + mMap.isMyLocationEnabled());
             sE.printStackTrace();
@@ -350,12 +360,12 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
 
     @Override
     public void onLocationChanged (Location location) {
-        if ( location != null && mLastLocation != null && mDefaultMarker != null ) {
+        if ( location != null && mLastLocation != null && mUserLocationMarker != null ) {
             Log.e(TAG, "Location Compare: \nmLastLocation:\t" + mLastLocation.toString()
                        + " \nmNewwLocation:\t" + location.toString());
 
-            mDefaultMarker.remove(); // the current location of the user
-            Log.e(TAG, "mDefaultMarker Removed");
+            mUserLocationMarker.remove(); // the current location of the user
+            Log.e(TAG, "mUserLocationMarker Removed");
 
             if ( mDefaultZeroMarker != null ) {
                 mDefaultZeroMarker.remove(); // Default meridian, equator  ( 0, 0 )
@@ -363,6 +373,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
             }
         }
         handleNewLocation(location);
+        Log.e(TAG, "mUserLocationMarker UPDATED");
     }
 
     private void handleNewLocation (Location location) {
@@ -373,19 +384,19 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
             LatLng latLng = new LatLng(currentLatitude, currentLongitude);
             // default marker setting plus default icon setting from google maps
 
-            mDefaultMarker = mMap.addMarker(new MarkerOptions().title("Current Location")
-                                                               .position(latLng)
-                                                               .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+            mUserLocationMarker = mMap.addMarker(new MarkerOptions().title("Current Location")
+                                                                    .position(latLng)
+                                                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
             // Move the camera to Device Location (or last known location)
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULTZOOM));
         } else {
-            Log.e(TAG, "Location is NULL");
-            /*Log.e(TAG, "Default Location ( 0, 0 )");
+            Log.e(TAG, "Location is NULL --- resorting to default location");
+            Log.e(TAG, "Default Location ( 0, 0 )");
             // default to ( 0, 0 ) lat long location
             mDefaultZeroMarker = mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0))
                                                                    .title("Default Location")
                                                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
-            Log.e(TAG, "mDeafult_Zero_Marker Added");*/
+            Log.e(TAG, "mDeafult_Zero_Marker Added");
         }
     }
 
@@ -464,15 +475,38 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
             case R.id.list_item_btn:
                 Toast.makeText(BlocSpotMainActivity.this, "List View Clicked", Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.filter_item:
+            case R.id.filter_item_button:
                 Toast.makeText(BlocSpotMainActivity.this, "Filter Button Clicked", Toast.LENGTH_SHORT).show();
                 return true;
             case R.id.search_btn:
+                Log.e(TAG, "Search Button Tapped");
+                searchForPlace();
                 Toast.makeText(BlocSpotMainActivity.this, "Search Button Clicked", Toast.LENGTH_SHORT).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void searchForPlace() {
+
+        if (mGoogleApiClient.isConnected()) {
+            try {
+                PlacePicker.IntentBuilder placePickerBuilder = new PlacePicker.IntentBuilder();
+                startActivityForResult(placePickerBuilder.build(this), PLACE_PICKER_CODE);
+            } catch (GooglePlayServicesNotAvailableException gPlayErr) {
+                Log.e(TAG, "Play Service Not Available ---");
+                gPlayErr.printStackTrace();
+            } catch (GooglePlayServicesRepairableException repairableErr) {
+                Log.e(TAG, "Play Service Repairable Exception ---");
+                repairableErr.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
     }
 
 
@@ -513,5 +547,14 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         });
     }
 
+/*
+    @Override
+    public void onPlaceSelected (Place place) {
 
+    }
+
+    @Override
+    public void onError (Status status) {
+
+    }*/
 }

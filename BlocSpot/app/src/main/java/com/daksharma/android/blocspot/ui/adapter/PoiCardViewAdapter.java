@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class PoiCardViewAdapter extends RecyclerView.Adapter<PoiCardViewAdapter.PoiCardsViewHolder> {
 
-    public final static String TAG = "com.daksharma.blocspot: " + PoiCardsViewHolder.class.getSimpleName().toUpperCase();
+    public final static String TAG = PoiCardsViewHolder.class.getSimpleName().toUpperCase();
 
     private List<PointOfInterestModel> poiData; // will contain the data for the poi items
 
