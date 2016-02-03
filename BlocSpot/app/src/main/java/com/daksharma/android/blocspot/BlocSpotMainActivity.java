@@ -263,6 +263,10 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
             mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
             handleNewLocation(mLastLocation);
 
+            if ( mLastLocation != null && servicesOK() ) {
+                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            }
+
 
 
             return;
@@ -394,6 +398,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
             mUserLocationMarker = mMap.addMarker(new MarkerOptions().title("Current Location")
                                                                     .position(latLng)
                                                                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+
             // Move the camera to Device Location (or last known location)
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULTZOOM));
         } else {
@@ -493,7 +498,6 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
             case R.id.search_btn:
                 Log.e(TAG, "Search Button Tapped");
                 searchForPlace();
-                Toast.makeText(BlocSpotMainActivity.this, "Search Button Clicked", Toast.LENGTH_SHORT).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -526,7 +530,6 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
                 Status status = PlaceAutocomplete.getStatus(this, data);
                 // TODO: Handle the error.
                 Log.i(TAG, status.getStatusMessage());
-
             } else if (resultCode == RESULT_CANCELED) {
                 // The user canceled the operation.
             }
