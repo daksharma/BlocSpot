@@ -15,8 +15,12 @@ import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,6 +40,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdate;
@@ -53,11 +58,12 @@ import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
-public class BlocSpotMainActivity extends FragmentActivity implements OnMapReadyCallback,
-                                                                      GoogleApiClient.ConnectionCallbacks,
-                                                                      GoogleApiClient.OnConnectionFailedListener,
-                                                                      LocationListener,
-                                                                      ActivityCompat.OnRequestPermissionsResultCallback {
+public class BlocSpotMainActivity extends AppCompatActivity implements OnMapReadyCallback,
+                                                                       GoogleApiClient.ConnectionCallbacks,
+                                                                       GoogleApiClient.OnConnectionFailedListener,
+                                                                       LocationListener,
+                                                                       PlaceSelectionListener,
+                                                                       ActivityCompat.OnRequestPermissionsResultCallback {
 
     public final static String TAG = BlocSpotMainActivity.class.getSimpleName().toUpperCase();
 
@@ -105,10 +111,11 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bloc_spot_main);
 
+        setUpToolBar();
+
         searchButton = ( Button ) findViewById(R.id.search_btn);
         listViewButton = ( Button ) findViewById(R.id.list_item_btn);
         filterButton = ( Button ) findViewById(R.id.filter_item_button);
-
 
 
         buildGoogleApiClient();
@@ -121,11 +128,14 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         }
 
 
+
+
         RealmConfiguration config = new RealmConfiguration.Builder(this).build();
         Realm.setDefaultConfiguration(config);
         realmStuffTest();
 
     }
+
 
     /*******************
      * GOOGLE API CLIENT
@@ -253,9 +263,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
             mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
             handleNewLocation(mLastLocation);
 
-            if ( mLastLocation != null && servicesOK() ) {
-                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-            }
+
 
             return;
         } else {
@@ -366,11 +374,10 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
 
             mUserLocationMarker.remove(); // the current location of the user
             Log.e(TAG, "mUserLocationMarker Removed");
-
-            if ( mDefaultZeroMarker != null ) {
-                mDefaultZeroMarker.remove(); // Default meridian, equator  ( 0, 0 )
-                Log.e(TAG, "mDefault_Zero_Marker Removed");
-            }
+        }
+        if ( mDefaultZeroMarker != null ) {
+            mDefaultZeroMarker.remove(); // Default meridian, equator  ( 0, 0 )
+            Log.e(TAG, "mDefault_Zero_Marker Removed");
         }
         handleNewLocation(location);
         Log.e(TAG, "mUserLocationMarker UPDATED");
@@ -469,6 +476,11 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         return super.onCreateOptionsMenu(menu);
     }
 
+    public void setUpToolBar () {
+        Toolbar toolbar = ( Toolbar ) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+    }
+
     @Override
     public boolean onOptionsItemSelected (MenuItem item) {
         switch ( item.getItemId() ) {
@@ -488,16 +500,16 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         }
     }
 
-    public void searchForPlace() {
+    public void searchForPlace () {
 
-        if (mGoogleApiClient.isConnected()) {
+        if ( mGoogleApiClient.isConnected() ) {
             try {
-                PlacePicker.IntentBuilder placePickerBuilder = new PlacePicker.IntentBuilder();
-                startActivityForResult(placePickerBuilder.build(this), PLACE_PICKER_CODE);
-            } catch (GooglePlayServicesNotAvailableException gPlayErr) {
+                Intent placeIntent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY).build(this);
+                startActivityForResult(placeIntent, PLACE_PICKER_CODE);
+            } catch ( GooglePlayServicesNotAvailableException gPlayErr ) {
                 Log.e(TAG, "Play Service Not Available ---");
                 gPlayErr.printStackTrace();
-            } catch (GooglePlayServicesRepairableException repairableErr) {
+            } catch ( GooglePlayServicesRepairableException repairableErr ) {
                 Log.e(TAG, "Play Service Repairable Exception ---");
                 repairableErr.printStackTrace();
             }
@@ -505,8 +517,20 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult (int requestCode, int resultCode, Intent data) {
+        if (requestCode == PLACE_PICKER_CODE) {
+            if (resultCode == RESULT_OK) {
+                Place place = PlaceAutocomplete.getPlace(this, data);
+                Log.i(TAG, "Place: " + place.getName());
+            } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
+                Status status = PlaceAutocomplete.getStatus(this, data);
+                // TODO: Handle the error.
+                Log.i(TAG, status.getStatusMessage());
 
+            } else if (resultCode == RESULT_CANCELED) {
+                // The user canceled the operation.
+            }
+        }
     }
 
 
@@ -547,7 +571,7 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
         });
     }
 
-/*
+
     @Override
     public void onPlaceSelected (Place place) {
 
@@ -556,5 +580,5 @@ public class BlocSpotMainActivity extends FragmentActivity implements OnMapReady
     @Override
     public void onError (Status status) {
 
-    }*/
+    }
 }
