@@ -44,11 +44,16 @@
             </intent-filter>
         </activity>
 
-        <!-- Google Maps API -->
+        <!-- Google Maps API
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="AIzaSyBsILRzH3wMX_Jl6oET9eIlUIEFeIzxmMI"/>
+            STUPID ERROR
+            -->
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDdxN6C8N-zrSrGHa8Hs9VS5xiQ2WofpiY"/>
 
         <!-- Google Play Service Version Number -->
         <meta-data

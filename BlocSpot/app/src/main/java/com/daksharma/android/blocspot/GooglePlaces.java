@@ -13,8 +13,10 @@ public class GooglePlaces {
 
 
     // Google Places serach url's
-    private static final String PLACES_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/search/json?";
+    private static final String PLACES_SEARCH_URL      = "https://maps.googleapis.com/maps/api/place/search/json?";
     private static final String PLACES_TEXT_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/search/json?";
-    private static final String PLACES_DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json?";
+    private static final String PLACES_DETAILS_URL     = "https://maps.googleapis.com/maps/api/place/details/json?";
+
+    String googlePlacesURL = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=Food%20Sh&sensor=false&radius=500&location=0,0&key=YOUR_KEY_HERE";
 
 }

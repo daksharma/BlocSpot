@@ -9,17 +9,37 @@ import io.realm.annotations.PrimaryKey;
 public class PointOfInterestModel extends RealmObject {
 
     @PrimaryKey
-    private String placeAddress; // no address will be the same  or use long/lat
+    private String placeId; // placeId will come from Google Places result object
 
-    private String id;
     private String placeName;
+    private String placeAddress;
+    private double mLongitude;
+    private double mLatitude;
     private String userNotes;
 
 
-//    public PointOfInterestModel(String placeName, String placeAddr) {
-//        this.placeName = placeName;
-//        this.placeAddress = placeAddr;
-//    }
+  /*  public PointOfInterestModel (String placeId,
+                                 String placeName,
+                                 String placeAddr,
+                                 double longitude,
+                                 double latitude,
+                                 String notes) {
+        this.placeName = placeName;
+        this.placeAddress = placeAddr;
+        this.mLongitude = longitude;
+        this.mLatitude = latitude;
+        this.userNotes = notes;
+    }
+    */
+
+
+    public String getPlaceId () {
+        return placeId;
+    }
+
+    public void setPlaceId (String placeId) {
+        this.placeId = placeId;
+    }
 
 
     public String getPlaceName () {
@@ -38,19 +58,28 @@ public class PointOfInterestModel extends RealmObject {
         this.placeAddress = placeAddr;
     }
 
-    public String getId () {
-        return id;
+    public double getmLatitude () {
+        return mLatitude;
     }
 
-    public void setId (String id) {
-        this.id = id;
+    public void setmLatitude (double mLatitude) {
+        this.mLatitude = mLatitude;
     }
 
-    public String getUserNotes() {
+    public double getmLongitude () {
+        return mLongitude;
+    }
+
+    public void setmLongitude (double mLongitude) {
+        this.mLongitude = mLongitude;
+    }
+
+
+    public String getUserNotes () {
         return userNotes;
     }
 
-    public void setUserNotes(String notes) {
+    public void setUserNotes (String notes) {
         this.userNotes = notes;
     }
 

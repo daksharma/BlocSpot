@@ -13,10 +13,9 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -41,7 +40,6 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
-import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -80,6 +78,8 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
     private boolean gpsEnabled  = false;
     private boolean wifiEnabled = false;
 
+    private Fragment mainMapFragment;
+    private Fragment placeDetailFragment;
 
     private MapFragment mMapFragment;
 
@@ -126,8 +126,6 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
         } else {
             Log.e(TAG, "Services NOT OK: Map not set-up");
         }
-
-
 
 
         RealmConfiguration config = new RealmConfiguration.Builder(this).build();
@@ -261,11 +259,13 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
                                               .setInterval(20 * 1000)
                                               .setFastestInterval(2000);
             mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            handleNewLocation(mLastLocation);
 
             if ( mLastLocation != null && servicesOK() ) {
                 LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
             }
+            handleNewLocation(mLastLocation);
+
+
 
 
 
@@ -504,6 +504,10 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
         }
     }
 
+    /**
+     * Launch the Place Search Activity
+     * @link https://developers.google.com/places/android-api/autocomplete
+     */
     public void searchForPlace () {
 
         if ( mGoogleApiClient.isConnected() ) {
@@ -536,10 +540,14 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
         }
     }
 
+    public void addToPoiRealmDB (Place poiPlace) {
+
+    }
+
 
     public void realmStuffTest () {
         PointOfInterestModel poiPlace = new PointOfInterestModel();
-        poiPlace.setId("001");
+        poiPlace.setPlaceId("001");
         poiPlace.setPlaceName("MY Place");
         poiPlace.setPlaceAddress("My Address");
 
@@ -553,7 +561,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements OnMapRead
             @Override
             public void execute (Realm bgRealm) {
                 PointOfInterestModel poi = bgRealm.createObject(PointOfInterestModel.class);
-                poi.setId("003");
+                poi.setPlaceId("003");
                 poi.setPlaceName("My Third Place");
                 poi.setPlaceAddress("My Third Address");
             }
