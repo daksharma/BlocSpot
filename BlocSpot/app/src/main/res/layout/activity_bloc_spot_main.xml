@@ -13,11 +13,10 @@
         android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"/>
 
-    <fragment
-        android:id="@+id/main_activity_map_fragment"
-        android:name="com.google.android.gms.maps.MapFragment"
+    <FrameLayout
+        android:id="@+id/content_fragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-    <!-- android:id="@+id/content_fragment" -->
+
 
 </LinearLayout>
