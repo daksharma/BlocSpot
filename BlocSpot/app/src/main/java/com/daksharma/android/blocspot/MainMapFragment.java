@@ -1,12 +1,10 @@
 package com.daksharma.android.blocspot;
 
-import android.*;
 import android.app.Dialog;
 import android.app.Fragment;
 
 
 import android.app.FragmentManager;
-import android.app.PendingIntent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -17,7 +15,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 
-import android.support.v4.app.FragmentActivity;
 
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -33,13 +30,11 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Places;
-import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -293,14 +288,6 @@ public class MainMapFragment extends Fragment implements OnMapReadyCallback,
         mGoogleApiClient.connect();
     }
 
-    public boolean googleApiClientConnected() {
-        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            return true;
-        }else {
-            buildGoogleApiClient();
-        }
-        return false;
-    }
 
     @Override
     public void onRequestPermissionsResult (int requestCode,

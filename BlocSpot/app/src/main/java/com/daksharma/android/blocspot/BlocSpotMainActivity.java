@@ -142,8 +142,8 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
      * @link https://developers.google.com/places/android-api/autocomplete
      */
     public void searchForPlace () {
-
-        //if ( mapFragObject.googleApiClientConnected() ) {
+        //boolean apiEnabled = mapFragObject.servicesOK();
+        //if ( apiEnabled ) {
             try {
                 Intent placeIntent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY).build(this);
                 startActivityForResult(placeIntent, PLACE_PICKER_CODE);
