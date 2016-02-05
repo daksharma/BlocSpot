@@ -2,6 +2,8 @@ package com.daksharma.android.blocspot;
 
 import android.Manifest;
 import android.app.Dialog;
+
+import android.app.Fragment;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -13,7 +15,7 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
+
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -71,7 +73,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
     MainMapFragment mapFragObject;
 
 
-    MapFragment mMainMapFragment;
+    Fragment mMainMapFragment;
     Fragment mPlaceDetailFragment;
 
     @Override
@@ -84,12 +86,12 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
         mMainMapFragment = new MainMapFragment();
         mPlaceDetailFragment = new PlaceDetailFragment();
 
-        getFragmentManager().beginTransaction().add(R.id.content_fragment, mMainMapFragment, "MainMap").commit();
+        getFragmentManager().beginTransaction().replace(R.id.content_fragment, mMainMapFragment).commit();
 
 
-        RealmConfiguration config = new RealmConfiguration.Builder(this).build();
-        Realm.setDefaultConfiguration(config);
-        realmStuffTest();
+        //RealmConfiguration config = new RealmConfiguration.Builder(this).build();
+        //Realm.setDefaultConfiguration(config);
+        //realmStuffTest();
 
     }
 
@@ -97,7 +99,6 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
     public Resources getResources () {
         return super.getResources();
     }
-
 
 
     /**
@@ -142,7 +143,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
      */
     public void searchForPlace () {
 
-        if ( mapFragObject.googleApiClientConnected() ) {
+        //if ( mapFragObject.googleApiClientConnected() ) {
             try {
                 Intent placeIntent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY).build(this);
                 startActivityForResult(placeIntent, PLACE_PICKER_CODE);
@@ -153,7 +154,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
                 Log.e(TAG, "Play Service Repairable Exception ---");
                 repairableErr.printStackTrace();
             }
-        }
+        //}
     }
 
     @Override

@@ -2,6 +2,11 @@ package com.daksharma.android.blocspot;
 
 import android.*;
 import android.app.Dialog;
+import android.app.Fragment;
+
+
+import android.app.FragmentManager;
+import android.app.PendingIntent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -11,8 +16,9 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
+
 import android.support.v4.app.FragmentActivity;
+
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,6 +39,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -42,13 +49,13 @@ import com.google.android.gms.maps.model.MarkerOptions;
 /**
  * Created by Daksh on 2/4/16.
  */
-public class MainMapFragment extends MapFragment implements OnMapReadyCallback,
+public class MainMapFragment extends Fragment implements OnMapReadyCallback,
                                                          GoogleApiClient.ConnectionCallbacks,
                                                          GoogleApiClient.OnConnectionFailedListener,
                                                          LocationListener,
                                                          ActivityCompat.OnRequestPermissionsResultCallback {
 
-    private final static String TAG = MainMapFragment.class.toString().toUpperCase();
+    private final static String TAG = MainMapFragment.class.getSimpleName().toUpperCase();
 
 
     private boolean gpsEnabled  = false;
@@ -90,10 +97,34 @@ public class MainMapFragment extends MapFragment implements OnMapReadyCallback,
 
     @Override
     public View onCreateView (LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.main_map_fragment, container, false);
 
+        buildGoogleApiClient();
+        if ( servicesOK() ) {
+            setUpMapIfNeeded();
+        } else {
+            Log.e(TAG, "Services NOT OK: Map not set-up");
+        }
+
         return view;
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        if (mMap == null)  {
+            setUpMapIfNeeded();
+        }
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if ( servicesOK() ) {
+            setUpMapIfNeeded();
+        } else {
+            Log.e(TAG, "Services NOT OK: Map not set-up");
+        }
+
     }
 
     @Override
@@ -103,7 +134,7 @@ public class MainMapFragment extends MapFragment implements OnMapReadyCallback,
             setUpMapIfNeeded();
         }
         MapStateManager msManager = new MapStateManager(getActivity());
-        CameraPosition position  = msManager.getSavedCameraPosition();
+        CameraPosition  position  = msManager.getSavedCameraPosition();
         if ( position != null && mMap != null ) {
             CameraUpdate camUpdate = CameraUpdateFactory.newCameraPosition(position);
             mMap.moveCamera(camUpdate);
@@ -135,57 +166,68 @@ public class MainMapFragment extends MapFragment implements OnMapReadyCallback,
 
     private void setUpMapIfNeeded () {
         if ( mMap == null ) {
-            mMapFragment = ( MapFragment ) getFragmentManager().findFragmentById(R.id.main_activity_map_fragment);
-            mMapFragment.getMapAsync(this);
+            //mMapFragment = ( MapFragment ) getFragmentManager().findFragmentById(R.id.main_map_fragment);
+            FragmentManager fm = getChildFragmentManager();
+            mMapFragment = (MapFragment) fm.findFragmentById(R.id.main_map_fragment);
+            if (mMapFragment == null ) {
+                mMapFragment.newInstance();
+                fm.beginTransaction().replace(R.id.content_fragment, mMapFragment).commit();
+            }
+            if (mMapFragment != null) {
+                mMapFragment.getMapAsync(this);
+            }
         }
     }
 
 
     @Override
     public void onMapReady (GoogleMap map) {
-        mMap = map;
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        mMap.setIndoorEnabled(false);
-        mMap.setTrafficEnabled(false);
-        try {
-            // check if location is enabled based on wifi or gps
-            if ( gpsEnabled || wifiEnabled ) {
-                mMap.getUiSettings().setMyLocationButtonEnabled(true); // doesnt seem to be working ????
-                mMap.setMyLocationEnabled(true);
-                initLocationUpdater();
-                Log.e(TAG, "mMap.isMyLocationEnabled: " + mMap.isMyLocationEnabled());
-            } else {
-                Log.e(TAG, "Location toggle is NOT Enabled");
+        if (mMapFragment != null) {
+            mMap = map;
+            if (mMap != null) {
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                mMap.setIndoorEnabled(false);
+                mMap.setTrafficEnabled(false);
+                try {
+                    // check if location is enabled based on wifi or gps
+                    if ( gpsEnabled || wifiEnabled ) {
+                        mMap.getUiSettings().setMyLocationButtonEnabled(true); // doesnt seem to be working ????
+                        mMap.setMyLocationEnabled(true);
+                        initLocationUpdater();
+                        Log.e(TAG, "mMap.isMyLocationEnabled: " + mMap.isMyLocationEnabled());
+                    } else {
+                        Log.e(TAG, "Location toggle is NOT Enabled");
+                    }
+                } catch ( SecurityException sE ) {
+                    Log.e(TAG, "mMap.setMyLocationEnabled: " + mMap.isMyLocationEnabled());
+                    sE.printStackTrace();
+                }
             }
-        } catch ( SecurityException sE ) {
-            Log.e(TAG, "mMap.setMyLocationEnabled: " + mMap.isMyLocationEnabled());
-            sE.printStackTrace();
         }
     }
 
     @Override
     public void onLocationChanged (Location location) {
-        if ( location != null && mLastLocation != null && mUserLocationMarker != null ) {
+        if ( (mMapFragment != null) && (location != null) && (mUserLocationMarker != null) ) {
             Log.e(TAG, "Location Compare: \nmLastLocation:\t" + mLastLocation.toString()
                        + " \nmNewwLocation:\t" + location.toString());
 
             mUserLocationMarker.remove(); // the current location of the user
             Log.e(TAG, "mUserLocationMarker Removed");
+            handleNewLocation(location);
+            Log.e(TAG, "mUserLocationMarker UPDATED");
         }
         if ( mDefaultZeroMarker != null ) {
             mDefaultZeroMarker.remove(); // Default meridian, equator  ( 0, 0 )
             Log.e(TAG, "mDefault_Zero_Marker Removed");
         }
-        handleNewLocation(location);
-        Log.e(TAG, "mUserLocationMarker UPDATED");
+
     }
 
     private void handleNewLocation (Location location) {
-        if ( location != null ) {
+        if ( location != null && mMapFragment != null) {
             Log.e(TAG, location.toString());
-            double currentLatitude = location.getLatitude();
-            double currentLongitude = location.getLongitude();
-            LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
             // default marker setting plus default icon setting from google maps
 
             mUserLocationMarker = mMap.addMarker(new MarkerOptions().title("Current Location")
@@ -194,7 +236,7 @@ public class MainMapFragment extends MapFragment implements OnMapReadyCallback,
 
             // Move the camera to Device Location (or last known location)
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULTZOOM));
-        } else {
+        } else if ( mMapFragment != null && location == null) {
             Log.e(TAG, "Location is NULL --- resorting to default location");
             Log.e(TAG, "Default Location ( 0, 0 )");
             // default to ( 0, 0 ) lat long location
@@ -202,13 +244,16 @@ public class MainMapFragment extends MapFragment implements OnMapReadyCallback,
                                                                    .title("Default Location")
                                                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
             Log.e(TAG, "mDeafult_Zero_Marker Added");
+        } else {
+            Log.e(TAG, "Something with Location went horribly wrong");
         }
     }
 
 
     private void initLocationUpdater () {
         if ( ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-             && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ) {
+             && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                && mGoogleApiClient != null ) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -232,8 +277,6 @@ public class MainMapFragment extends MapFragment implements OnMapReadyCallback,
             }
             handleNewLocation(mLastLocation);
 
-
-            return;
         } else {
             Log.e(TAG, "Location Permission not granted\nmLocationRequest is not created");
             requestPermissionOnLaunch();
@@ -251,8 +294,10 @@ public class MainMapFragment extends MapFragment implements OnMapReadyCallback,
     }
 
     public boolean googleApiClientConnected() {
-        if (mGoogleApiClient.isConnected()) {
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             return true;
+        }else {
+            buildGoogleApiClient();
         }
         return false;
     }
