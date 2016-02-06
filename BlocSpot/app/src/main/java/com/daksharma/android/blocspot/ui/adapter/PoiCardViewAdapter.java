@@ -4,14 +4,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.daksharma.android.blocspot.R;
 import com.daksharma.android.blocspot.model.PointOfInterestModel;
-import com.daksharma.android.blocspot.ui.activity.PointOfInterestItemView;
-
-import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -24,13 +22,14 @@ public class PoiCardViewAdapter extends RecyclerView.Adapter<PoiCardViewAdapter.
 
     private List<PointOfInterestModel> poiData; // will contain the data for the poi items
 
-    public PoiCardViewAdapter(List<PointOfInterestModel> listItems) {
+    public PoiCardViewAdapter (List<PointOfInterestModel> listItems) {
         this.poiData = listItems;
     }
 
     @Override
     public PoiCardsViewHolder onCreateViewHolder (final ViewGroup poiCardsVh, int i) {
-        View v = LayoutInflater.from(poiCardsVh.getContext()).inflate(R.layout.poi_item_card, null);
+        View v = LayoutInflater.from(poiCardsVh.getContext())
+                               .inflate(R.layout.poi_item_card, null);
         PoiCardsViewHolder viewHolder = new PoiCardsViewHolder(v);
         return viewHolder;
     }
@@ -39,8 +38,8 @@ public class PoiCardViewAdapter extends RecyclerView.Adapter<PoiCardViewAdapter.
     public void onBindViewHolder (PoiCardsViewHolder poiCardsViewHolder, int position) {
         PointOfInterestModel poiCardsItems = poiData.get(position);
 
-        poiCardsViewHolder.locationNameTv.setText(poiCardsItems.getPlaceName());
-        poiCardsViewHolder.locationNoteTv.setText(poiCardsItems.getPlaceName());
+        poiCardsViewHolder.cardsPlaceNameTv.setText(poiCardsItems.getPlaceName());
+        poiCardsViewHolder.cardsdPlaceNoteTv.setText(poiCardsItems.getPlaceName());
 
     }
 
@@ -53,18 +52,32 @@ public class PoiCardViewAdapter extends RecyclerView.Adapter<PoiCardViewAdapter.
 
     public class PoiCardsViewHolder extends RecyclerView.ViewHolder {
 
-        public final String TAG = "com.daksharma.blocspot: " + PoiCardsViewHolder.class.getSimpleName().toUpperCase();
+        public final String TAG = PoiCardsViewHolder.class.getSimpleName().toUpperCase();
 
-        protected ImageView locationStreetIv;
-        protected TextView  locationNameTv;
-        protected TextView  locationNoteTv;
+        protected ImageView cardsPlaceStreetIv;
+        protected TextView  cardsPlaceNameTv;
+        protected TextView  cardsdPlaceNoteTv;
+        protected TextView  cardsPlaceAddressTv;
+        protected TextView  cardsPlaceDistanceTv;
+        protected Button    cardsEditButton;
+        protected Button    cardsBlueHeartButton;
+        protected Button    cardsRedHeartButton;
+        protected Button    cardsShowOnMapButton;
+        protected ImageView cardsCategoryColorIndicator;
 
 
         public PoiCardsViewHolder (View cardView) {
             super(cardView);
-            locationStreetIv = ( ImageView ) cardView.findViewById(R.id.locationStreetViewIv);
-            locationNameTv = (TextView) cardView.findViewById(R.id.locationNameTv);
-            locationNoteTv = (TextView) cardView.findViewById(R.id.locationNotesTv);
+            cardsPlaceStreetIv = ( ImageView ) cardView.findViewById(R.id.locationStreetViewIv);
+            cardsPlaceNameTv = ( TextView ) cardView.findViewById(R.id.locationNameTv);
+            cardsPlaceAddressTv = ( TextView ) cardView.findViewById(R.id.card_view_place_address);
+            cardsdPlaceNoteTv = ( TextView ) cardView.findViewById(R.id.locationNotesTv);
+            cardsPlaceDistanceTv = ( TextView ) cardView.findViewById(R.id.card_view_distance);
+            cardsEditButton = ( Button ) cardView.findViewById(R.id.card_view_edit_button);
+            cardsBlueHeartButton = ( Button ) cardView.findViewById(R.id.card_view_blue_heart_button);
+            cardsRedHeartButton = ( Button ) cardView.findViewById(R.id.card_view_red_heart_button);
+            cardsShowOnMapButton = ( Button ) cardView.findViewById(R.id.card_view_show_on_map_button);
+            cardsCategoryColorIndicator = ( ImageView ) cardView.findViewById(R.id.card_category_color_indicator);
 
         }
     }

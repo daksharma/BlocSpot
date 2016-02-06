@@ -10,10 +10,10 @@
         app:showAsAction="always"/>
 
     <item
-        android:id="@+id/filter_item_button"
-        android:icon="@drawable/filter_tune_icon"
+        android:id="@+id/show_map_view"
+        android:icon="@drawable/map_icon_btn"
         android:orderInCategory="1"
-        android:title="@string/menu_filter"
+        android:title="@string/menu_map_icon"
         app:showAsAction="always"/>
 
     <item

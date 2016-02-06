@@ -1,5 +1,7 @@
 package com.daksharma.android.blocspot.model;
 
+import android.widget.ImageView;
+
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
@@ -13,8 +15,10 @@ public class PointOfInterestModel extends RealmObject {
 
     private String placeName;
     private String placeAddress;
+    private float placeRating;
     private double mLongitude;
     private double mLatitude;
+    private boolean mPlaceVisited;
     private String userNotes;
 
 
@@ -58,6 +62,14 @@ public class PointOfInterestModel extends RealmObject {
         this.placeAddress = placeAddr;
     }
 
+    public void setPlaceRating (float placeRating) {
+        this.placeRating = placeRating;
+    }
+
+    public float getPlaceRating() {
+        return placeRating;
+    }
+
     public double getmLatitude () {
         return mLatitude;
     }
@@ -74,6 +86,14 @@ public class PointOfInterestModel extends RealmObject {
         this.mLongitude = mLongitude;
     }
 
+
+    public boolean getmPlaceVisited() {
+        return mPlaceVisited;
+    }
+
+    public void setmPlaceVisited(boolean placeVisited) {
+        this.mPlaceVisited = placeVisited;
+    }
 
     public String getUserNotes () {
         return userNotes;

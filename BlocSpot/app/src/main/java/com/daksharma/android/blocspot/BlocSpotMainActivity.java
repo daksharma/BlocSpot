@@ -1,58 +1,26 @@
 package com.daksharma.android.blocspot;
 
-import android.Manifest;
-import android.app.Dialog;
-
 import android.app.Fragment;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
-import android.location.Location;
-import android.location.LocationManager;
-import android.support.v4.app.ActivityCompat;
 
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.daksharma.android.blocspot.model.PointOfInterestModel;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
+
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -70,8 +38,6 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
 
     private Menu menu;
 
-    MainMapFragment mapFragObject;
-
 
     Fragment mMainMapFragment;
     Fragment mPlaceDetailFragment;
@@ -84,15 +50,24 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
         setUpToolBar();
 
         mMainMapFragment = new MainMapFragment();
-        mPlaceDetailFragment = new PlaceDetailFragment();
-
         getFragmentManager().beginTransaction().replace(R.id.content_fragment, mMainMapFragment).commit();
 
 
-        //RealmConfiguration config = new RealmConfiguration.Builder(this).build();
-        //Realm.setDefaultConfiguration(config);
-        //realmStuffTest();
+        RealmConfiguration config = new RealmConfiguration.Builder(this).deleteRealmIfMigrationNeeded()
+                                                                        .build();
+        Realm.setDefaultConfiguration(config);
+        realmStuffTest();
 
+    }
+
+    public void showMapFragment() {
+        mMainMapFragment = new MainMapFragment();
+        getFragmentManager().beginTransaction().replace(R.id.content_fragment, mMainMapFragment).commit();
+    }
+
+    public void showPlaceListFragment() {
+        mPlaceDetailFragment = new PlaceDetailFragment();
+        getFragmentManager().beginTransaction().replace(R.id.content_fragment, mPlaceDetailFragment).commit();
     }
 
     @Override
@@ -123,10 +98,10 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
     public boolean onOptionsItemSelected (MenuItem item) {
         switch ( item.getItemId() ) {
             case R.id.list_item_btn:
-                Toast.makeText(BlocSpotMainActivity.this, "List View Clicked", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "List Button Tapped");
                 return true;
-            case R.id.filter_item_button:
-                Toast.makeText(BlocSpotMainActivity.this, "Filter Button Clicked", Toast.LENGTH_SHORT).show();
+            case R.id.show_map_view:
+                showMapFragment();
                 return true;
             case R.id.search_btn:
                 Log.e(TAG, "Search Button Tapped");
@@ -139,47 +114,82 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
 
     /**
      * Launch the Place Search Activity
+     *
      * @link https://developers.google.com/places/android-api/autocomplete
      */
     public void searchForPlace () {
         //boolean apiEnabled = mapFragObject.servicesOK();
         //if ( apiEnabled ) {
-            try {
-                Intent placeIntent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY).build(this);
-                startActivityForResult(placeIntent, PLACE_PICKER_CODE);
-            } catch ( GooglePlayServicesNotAvailableException gPlayErr ) {
-                Log.e(TAG, "Play Service Not Available ---");
-                gPlayErr.printStackTrace();
-            } catch ( GooglePlayServicesRepairableException repairableErr ) {
-                Log.e(TAG, "Play Service Repairable Exception ---");
-                repairableErr.printStackTrace();
-            }
+        try {
+            Intent placeIntent = new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY).build(this);
+            startActivityForResult(placeIntent, PLACE_PICKER_CODE);
+        } catch ( GooglePlayServicesNotAvailableException gPlayErr ) {
+            Log.e(TAG, "Play Service Not Available ---");
+            gPlayErr.printStackTrace();
+        } catch ( GooglePlayServicesRepairableException repairableErr ) {
+            Log.e(TAG, "Play Service Repairable Exception ---");
+            repairableErr.printStackTrace();
+        }
         //}
     }
 
     @Override
     protected void onActivityResult (int requestCode, int resultCode, Intent data) {
-        if (requestCode == PLACE_PICKER_CODE) {
-            if (resultCode == RESULT_OK) {
+        if ( requestCode == PLACE_PICKER_CODE ) {
+            if ( resultCode == RESULT_OK ) {
                 Place place = PlaceAutocomplete.getPlace(this, data);
-                Log.i(TAG, "Place: " + place.getName());
-            } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
+                if (place != null) {
+                    placeResultArgumentToFragment(place);
+                } else {
+                    Log.e(TAG, "Place Result is NULL");
+                }
+            } else if ( resultCode == PlaceAutocomplete.RESULT_ERROR ) {
                 Status status = PlaceAutocomplete.getStatus(this, data);
                 // TODO: Handle the error.
                 Log.i(TAG, status.getStatusMessage());
-            } else if (resultCode == RESULT_CANCELED) {
+            } else if ( resultCode == RESULT_CANCELED ) {
                 // The user canceled the operation.
             }
         }
     }
 
+    public void placeResultArgumentToFragment (Place place) {
+        Log.i(TAG, "Place: " + place.getName());
+        mPlaceDetailFragment = new PlaceDetailFragment();
+        Bundle mPlaceDetailArgs = new Bundle();
+        mPlaceDetailArgs.putString("PlaceId", place.getId());
+        mPlaceDetailArgs.putCharSequence("PlaceName", place.getName());
+        mPlaceDetailArgs.putCharSequence("PlaceAddress", place.getAddress());
+        mPlaceDetailArgs.putFloat("PlaceRating", place.getRating());
+        mPlaceDetailArgs.putDouble("PlaceLatitude", place.getLatLng().latitude);
+        mPlaceDetailArgs.putDouble("PlaceLongitude", place.getLatLng().longitude);
+        mPlaceDetailFragment.setArguments(mPlaceDetailArgs);
+        getFragmentManager().beginTransaction()
+                            .replace(R.id.content_fragment, mPlaceDetailFragment)
+                            .commit();
+    }
+
+    @Override
+    public void onPlaceSelected (Place place) {
+
+    }
+
+    @Override
+    public void onError (Status status) {
+
+    }
 
 
     public void realmStuffTest () {
-        PointOfInterestModel poiPlace = new PointOfInterestModel();
+        final PointOfInterestModel poiPlace = new PointOfInterestModel();
         poiPlace.setPlaceId("001");
         poiPlace.setPlaceName("MY Place");
         poiPlace.setPlaceAddress("My Address");
+        poiPlace.setPlaceRating(4.5f);
+        poiPlace.setmLatitude(12.093485);
+        poiPlace.setmLongitude(12.093485);
+        poiPlace.setmPlaceVisited(false);
+        poiPlace.setUserNotes("Some Kind of Note");
 
         realmObj = Realm.getDefaultInstance();
         realmObj.beginTransaction();
@@ -191,9 +201,14 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
             @Override
             public void execute (Realm bgRealm) {
                 PointOfInterestModel poi = bgRealm.createObject(PointOfInterestModel.class);
-                poi.setPlaceId("003");
+                poi.setPlaceId("002");
                 poi.setPlaceName("My Third Place");
                 poi.setPlaceAddress("My Third Address");
+                poi.setPlaceRating(3.6f);
+                poi.setmLatitude(12.12345);
+                poi.setmLongitude(12.12345);
+                poi.setmPlaceVisited(true);
+                poi.setUserNotes("Some other kind of note");
             }
         }, new Realm.Transaction.Callback() {
             @Override
@@ -213,13 +228,4 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
     }
 
 
-    @Override
-    public void onPlaceSelected (Place place) {
-
-    }
-
-    @Override
-    public void onError (Status status) {
-
-    }
 }
