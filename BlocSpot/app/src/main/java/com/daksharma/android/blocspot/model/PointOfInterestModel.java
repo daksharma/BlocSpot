@@ -18,6 +18,7 @@ public class PointOfInterestModel extends RealmObject {
     private float placeRating;
     private double mLongitude;
     private double mLatitude;
+    private String mPlaceCategory;
     private boolean mPlaceVisited;
     private String userNotes;
 
@@ -86,6 +87,14 @@ public class PointOfInterestModel extends RealmObject {
         this.mLongitude = mLongitude;
     }
 
+
+    public void setmPlaceCategory(String category) {
+        this.mPlaceCategory = category;
+    }
+
+    public String getmPlaceCategory() {
+        return mPlaceCategory;
+    }
 
     public boolean getmPlaceVisited() {
         return mPlaceVisited;

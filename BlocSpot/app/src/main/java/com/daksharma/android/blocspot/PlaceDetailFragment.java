@@ -2,13 +2,21 @@ package com.daksharma.android.blocspot;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.daksharma.android.blocspot.model.PointOfInterestModel;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 /**
  * Created by Daksh on 2/4/16.
@@ -24,7 +32,7 @@ public class PlaceDetailFragment extends Fragment {
     //private TextView  detailPlaceDescription; Place Api does not have this in the result
     private EditText  detailPlaceEditNotes;
     private EditText  detailPlaceEditCategory;
-    private Button    detailPlaceVisitedButton;
+    private CheckBox  detailPlaceVisitedButton;
     private Button    detailPlaceSaveButton;
 
 
@@ -34,8 +42,16 @@ public class PlaceDetailFragment extends Fragment {
     private float   placeRating;
     private double  placeLatitude;
     private double  placeLongitude;
+    private String  placeCategory;
     private boolean placeVisited;
     private String  placeUserNotes;
+
+
+    private boolean isArgumentsEmpty;
+    private boolean userNotesAdded;
+    private boolean userCategoryAdded;
+
+    private Realm realmObj;
 
 
     @Override
@@ -53,26 +69,15 @@ public class PlaceDetailFragment extends Fragment {
         detailPlaceRating = ( TextView ) view.findViewById(R.id.place_detail_rating);
         detailPlaceEditNotes = ( EditText ) view.findViewById(R.id.place_detail_edit_notes);
         detailPlaceEditCategory = ( EditText ) view.findViewById(R.id.place_detail_edit_category);
-        detailPlaceVisitedButton = (Button) view.findViewById(R.id.place_detail_place_visited_button);
+        detailPlaceVisitedButton = ( CheckBox ) view.findViewById(R.id.place_detail_place_visited_button);
         detailPlaceSaveButton = ( Button ) view.findViewById(R.id.place_detail_save_button);
 
 
-        if ( getArguments() != null ) {
-            placeId = getArguments().getString("PlaceId");
-            placeNameTitle = getArguments().getString("PlaceName");
-            placeNameAddress = getArguments().getString("PlaceAddress");
-            placeRating = getArguments().getFloat("PlaceRating");
-            placeLatitude = getArguments().getDouble("PlaceLatitude");
-            placeLongitude = getArguments().getDouble("PlaceLongitude");
+        getArgumentsFromBungle();
+
+        saveButtonSetUp();
 
 
-            detailPlaceTitle.setText(placeNameTitle);
-            detailPlaceAddress.setText(placeNameAddress);
-            detailPlaceRating.setText("Rating: " + placeRating*10);
-
-
-        }
-        
         return view;
     }
 
@@ -80,6 +85,103 @@ public class PlaceDetailFragment extends Fragment {
     @Override
     public void onViewCreated (View view, Bundle savedInstanceState) {
 
+    }
+
+
+    public void getArgumentsFromBungle () {
+        if ( getArguments() != null ) {
+            placeId = getArguments().getString("PlaceId");
+            placeNameTitle = getArguments().getString("PlaceName");
+            placeNameAddress = getArguments().getString("PlaceAddress");
+            placeRating = getArguments().getFloat("PlaceRating") * 10;
+            placeLatitude = getArguments().getDouble("PlaceLatitude");
+            placeLongitude = getArguments().getDouble("PlaceLongitude");
+
+
+            if ( detailPlaceVisitedButton.isSelected() ) {
+                placeVisited = detailPlaceVisitedButton.isSelected();
+            } else {
+                placeVisited = false;
+            }
+
+
+            detailPlaceTitle.setText(placeNameTitle);
+            detailPlaceAddress.setText(placeNameAddress);
+            detailPlaceRating.setText("Rating: " + placeRating);
+
+            isArgumentsEmpty = false; // getArguments are not null and not empty (data is retrieved)
+
+        } else {
+            isArgumentsEmpty = true; // getArguments are null or empty. ( data is not retrieved )
+        }
+    }
+
+
+    public void saveButtonSetUp() {
+        detailPlaceSaveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick (View v) {
+                Log.e(TAG, "Add to Favorite BUTTON CLICKED");
+
+                if ( detailPlaceEditCategory.length() > 0 ) {
+                    placeCategory = detailPlaceEditCategory.getText().toString();
+                    userCategoryAdded = true;
+                } else {
+                    userCategoryAdded = false;
+                    Log.e(TAG, "Category is EMPTY");
+                }
+
+                if ( detailPlaceEditNotes.length() > 0 ) {
+                    placeUserNotes = detailPlaceEditNotes.getText().toString();
+                    userNotesAdded = true;
+                } else {
+                    userNotesAdded = false;
+                    Log.e(TAG, "Notes are EMPTY");
+                }
+
+
+                if (!isArgumentsEmpty && userCategoryAdded != false && userNotesAdded != false) {
+                    addPlaceDetailToRealmDB();
+                } else {
+                    Toast.makeText(getActivity(), "Notes and Category cannot be empty", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Notes and Category are EMPTY");
+                }
+            }
+        });
+    }
+
+
+    public void addPlaceDetailToRealmDB () {
+        realmObj = Realm.getDefaultInstance();
+        realmObj.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute (Realm bgRealm) {
+                PointOfInterestModel poi = bgRealm.createObject(PointOfInterestModel.class);
+                poi.setPlaceId(placeId);
+                poi.setPlaceName(placeNameTitle);
+                poi.setPlaceAddress(placeNameAddress);
+                poi.setPlaceRating(placeRating);
+                poi.setmLatitude(placeLatitude);
+                poi.setmLongitude(placeLongitude);
+                poi.setmPlaceVisited(placeVisited);
+                poi.setUserNotes(placeUserNotes);
+                poi.setmPlaceCategory(placeCategory);
+            }
+        }, new Realm.Transaction.Callback() {
+            @Override
+            public void onSuccess () {
+                Toast.makeText(getActivity(), "Place address added to realm", Toast.LENGTH_SHORT).show();
+                RealmResults<PointOfInterestModel> results = realmObj.where(PointOfInterestModel.class)
+                                                                     .findAll();
+                Log.e(TAG, "Realm Database Items: " + String.valueOf(results.size()));
+
+            }
+
+            @Override
+            public void onError (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
 }
