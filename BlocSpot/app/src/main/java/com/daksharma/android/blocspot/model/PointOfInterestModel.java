@@ -23,21 +23,6 @@ public class PointOfInterestModel extends RealmObject {
     private String userNotes;
 
 
-  /*  public PointOfInterestModel (String placeId,
-                                 String placeName,
-                                 String placeAddr,
-                                 double longitude,
-                                 double latitude,
-                                 String notes) {
-        this.placeName = placeName;
-        this.placeAddress = placeAddr;
-        this.mLongitude = longitude;
-        this.mLatitude = latitude;
-        this.userNotes = notes;
-    }
-    */
-
-
     public String getPlaceId () {
         return placeId;
     }

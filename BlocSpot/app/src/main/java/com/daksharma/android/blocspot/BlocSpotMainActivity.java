@@ -41,6 +41,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
 
     Fragment mMainMapFragment;
     Fragment mPlaceDetailFragment;
+    Fragment mCardRecyclerViewFragment;
 
     @Override
     protected void onCreate (Bundle savedInstanceState) {
@@ -53,12 +54,13 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
         getFragmentManager().beginTransaction().replace(R.id.content_fragment, mMainMapFragment).commit();
 
 
+        // TODO: MAKE SURE TO MODIFY DB DELETE FOR ACTUAL USE
         RealmConfiguration config = new RealmConfiguration.Builder(this).deleteRealmIfMigrationNeeded()
                                                                         .build();
         Realm.setDefaultConfiguration(config);
         realmStuffTest();
-
     }
+
 
     public void showMapFragment() {
         mMainMapFragment = new MainMapFragment();
@@ -68,6 +70,11 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
     public void showPlaceListFragment() {
         mPlaceDetailFragment = new PlaceDetailFragment();
         getFragmentManager().beginTransaction().replace(R.id.content_fragment, mPlaceDetailFragment).commit();
+    }
+
+    public void showCardRecyclerFragment() {
+        mCardRecyclerViewFragment = new CardsRecyclerViewFragment();
+        getFragmentManager().beginTransaction().replace(R.id.content_fragment, mCardRecyclerViewFragment).commit();
     }
 
     @Override
@@ -98,6 +105,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
     public boolean onOptionsItemSelected (MenuItem item) {
         switch ( item.getItemId() ) {
             case R.id.list_item_btn:
+                showCardRecyclerFragment();
                 Log.e(TAG, "List Button Tapped");
                 return true;
             case R.id.show_map_view:
@@ -185,6 +193,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
         poiPlace.setPlaceId("001");
         poiPlace.setPlaceName("MY Place");
         poiPlace.setPlaceAddress("My Address");
+        poiPlace.setmPlaceCategory("House");
         poiPlace.setPlaceRating(4.5f);
         poiPlace.setmLatitude(12.093485);
         poiPlace.setmLongitude(12.093485);
@@ -204,6 +213,7 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
                 poi.setPlaceId("002");
                 poi.setPlaceName("My Third Place");
                 poi.setPlaceAddress("My Third Address");
+                poi.setmPlaceCategory("House");
                 poi.setPlaceRating(3.6f);
                 poi.setmLatitude(12.12345);
                 poi.setmLongitude(12.12345);

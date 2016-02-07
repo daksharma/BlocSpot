@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/not_yet_visited_circle_x"
+          android:state_checked="false"/>
+    <item android:drawable="@drawable/visited_circle_check_mark"
+          android:state_checked="true"/>
+    <item android:drawable="@drawable/not_yet_visited_circle_x"/>
+</selector>

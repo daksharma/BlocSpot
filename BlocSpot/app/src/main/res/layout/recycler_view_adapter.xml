@@ -4,6 +4,11 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
+    <Spinner
+        android:id="@+id/category_selection_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/actionBarSize"/>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view_adapter"

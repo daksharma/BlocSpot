@@ -98,11 +98,7 @@ public class PlaceDetailFragment extends Fragment {
             placeLongitude = getArguments().getDouble("PlaceLongitude");
 
 
-            if ( detailPlaceVisitedButton.isSelected() ) {
-                placeVisited = detailPlaceVisitedButton.isSelected();
-            } else {
-                placeVisited = false;
-            }
+
 
 
             detailPlaceTitle.setText(placeNameTitle);
@@ -137,6 +133,12 @@ public class PlaceDetailFragment extends Fragment {
                 } else {
                     userNotesAdded = false;
                     Log.e(TAG, "Notes are EMPTY");
+                }
+
+                if ( detailPlaceVisitedButton.isSelected() ) {
+                    placeVisited = detailPlaceVisitedButton.isSelected();
+                } else {
+                    placeVisited = false;
                 }
 
 
