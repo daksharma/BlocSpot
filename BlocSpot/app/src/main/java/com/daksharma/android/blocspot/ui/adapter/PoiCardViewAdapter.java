@@ -56,13 +56,20 @@ public class PoiCardViewAdapter extends RecyclerView.Adapter<PoiCardViewAdapter.
         poiCardsViewHolder.cardsPlaceItemRating.setText(Float.toString(poiCardsItems.getPlaceRating()));
 
         if ( poiCardsItems.getmPlaceVisited() == true ) {
-            poiCardsViewHolder.cardsPlaceVisitedCheckBox.setText("Visited");
+            poiCardsViewHolder.cardsPlaceVisitedTextView.setText("Visited");
+            poiCardsViewHolder.cardsPlaceVisitedCheckBox.setBackgroundResource(R.drawable.visited_circle_check_mark);
         } else {
-            poiCardsViewHolder.cardsPlaceVisitedCheckBox.setText("Not Yet Visited");
+            poiCardsViewHolder.cardsPlaceVisitedTextView.setText("Not Yet Visited");
+            poiCardsViewHolder.cardsPlaceVisitedCheckBox.setBackgroundResource(R.drawable.not_yet_visited_circle_x);
         }
 
         poiCardsViewHolder.cardsPlaceNoteTv.setText(poiCardsItems.getUserNotes());
 
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recView) {
+        super.onAttachedToRecyclerView(recView);
     }
 
 
@@ -82,7 +89,8 @@ public class PoiCardViewAdapter extends RecyclerView.Adapter<PoiCardViewAdapter.
         protected TextView  cardsPlaceAddressTv;
         protected TextView  cardsPlaceDistanceTv;
         protected TextView  cardsPlaceItemRating;
-        protected CheckBox  cardsPlaceVisitedCheckBox;
+        protected ImageView  cardsPlaceVisitedCheckBox;
+        protected TextView cardsPlaceVisitedTextView;
         protected Button    cardsEditButton;
         protected Button    cardsShowOnMapButton;
         protected ImageView cardsCategoryColorIndicator;
@@ -96,7 +104,8 @@ public class PoiCardViewAdapter extends RecyclerView.Adapter<PoiCardViewAdapter.
             cardsPlaceNoteTv = ( TextView ) cardView.findViewById(R.id.locationNotesTv);
             cardsPlaceDistanceTv = ( TextView ) cardView.findViewById(R.id.card_view_distance);
             cardsPlaceItemRating = ( TextView ) cardView.findViewById(R.id.card_view_item_rating);
-            cardsPlaceVisitedCheckBox = ( CheckBox ) cardView.findViewById(R.id.card_view_visited_checkbox);
+            cardsPlaceVisitedCheckBox = ( ImageView ) cardView.findViewById(R.id.card_view_visited_checkbox);
+            cardsPlaceVisitedTextView = ( TextView ) cardView.findViewById(R.id.card_view_visited_tv);
             cardsEditButton = ( Button ) cardView.findViewById(R.id.card_view_edit_button);
             cardsShowOnMapButton = ( Button ) cardView.findViewById(R.id.card_view_show_on_map_button);
             cardsCategoryColorIndicator = ( ImageView ) cardView.findViewById(R.id.card_category_color_indicator);

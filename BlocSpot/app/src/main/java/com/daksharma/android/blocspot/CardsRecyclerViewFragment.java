@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Spinner;
 
 import com.daksharma.android.blocspot.model.PointOfInterestModel;
 import com.daksharma.android.blocspot.ui.adapter.PoiCardViewAdapter;
@@ -27,9 +28,12 @@ public class CardsRecyclerViewFragment extends Fragment {
     private PoiCardViewAdapter         mRecyclerViewAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
+    private Spinner categorySelectionSpinner;
+
     @Override
     public void onCreate (Bundle saveInstanceState) {
         super.onCreate(saveInstanceState);
+
     }
 
     @Override
@@ -37,10 +41,18 @@ public class CardsRecyclerViewFragment extends Fragment {
 
         View rootView = inflater.inflate(R.layout.recycler_view_adapter, container, false);
 
+
         mRecyclerView = ( RecyclerView ) rootView.findViewById(R.id.recycler_view_adapter);
+        categorySelectionSpinner = ( Spinner ) rootView.findViewById(R.id.category_selection_spinner);
+
+
+
+
         mLayoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
+
         Realm                              newRealm = Realm.getDefaultInstance();
         RealmResults<PointOfInterestModel> poiData  = newRealm.where(PointOfInterestModel.class).findAll();
+
         mRecyclerViewAdapter = new PoiCardViewAdapter(poiData);
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mRecyclerView.setHasFixedSize(true);
