@@ -21,6 +21,9 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.google.android.gms.maps.model.Marker;
+
+import java.util.ArrayList;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -36,8 +39,8 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
     private static final int PLACE_PICKER_CODE = 4;
 
 
-    private Menu menu;
-
+    private       Menu              menu;
+    public static ArrayList<Marker> mapMarkers;
 
     Fragment mMainMapFragment;
     Fragment mPlaceDetailFragment;
@@ -62,12 +65,12 @@ public class BlocSpotMainActivity extends AppCompatActivity implements PlaceSele
     }
 
 
-    public void showMapFragment() {
+    public void showMapFragment () {
         mMainMapFragment = new MainMapFragment();
         getFragmentManager().beginTransaction().replace(R.id.content_fragment, mMainMapFragment).commit();
     }
 
-    public void showPlaceListFragment() {
+    public void showPlaceListFragment () {
         mPlaceDetailFragment = new PlaceDetailFragment();
         getFragmentManager().beginTransaction().replace(R.id.content_fragment, mPlaceDetailFragment).commit();
     }

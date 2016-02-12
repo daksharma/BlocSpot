@@ -97,10 +97,6 @@ public class PlaceDetailFragment extends Fragment {
             placeLatitude = getArguments().getDouble("PlaceLatitude");
             placeLongitude = getArguments().getDouble("PlaceLongitude");
 
-
-
-
-
             detailPlaceTitle.setText(placeNameTitle);
             detailPlaceAddress.setText(placeNameAddress);
             detailPlaceRating.setText("Rating: " + placeRating);

@@ -19,8 +19,7 @@
             android:id="@+id/locationStreetViewIv"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxHeight="150dp"
-            />
+            android:maxHeight="150dp"/>
 
         <TextView
             android:id="@+id/locationNameTv"
@@ -65,8 +64,7 @@
             android:layout_below="@id/card_view_distance"
             android:layout_toRightOf="@id/card_view_item_rating"
             android:background="@drawable/rating_star_icon"
-            android:paddingTop="@dimen/default_padding"
-            />
+            android:paddingTop="@dimen/default_padding"/>
 
 
         <TextView
@@ -118,8 +116,6 @@
                 android:layout_toRightOf="@id/card_view_edit_button"
                 android:text="Show on Map"/>
         </LinearLayout>
-
-
 
 
         <ImageView
