@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -63,6 +64,7 @@ public class PlaceDetailFragment extends Fragment {
     public View onCreateView (LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.place_detail_fragment, container, false);
 
+
         detailPlaceStreetImage = ( ImageView ) view.findViewById(R.id.detail_place_street_image);
         detailPlaceTitle = ( TextView ) view.findViewById(R.id.detail_place_title);
         detailPlaceAddress = ( TextView ) view.findViewById(R.id.detail_place_address);
@@ -70,10 +72,23 @@ public class PlaceDetailFragment extends Fragment {
         detailPlaceEditNotes = ( EditText ) view.findViewById(R.id.place_detail_edit_notes);
         detailPlaceEditCategory = ( EditText ) view.findViewById(R.id.place_detail_edit_category);
         detailPlaceVisitedButton = ( CheckBox ) view.findViewById(R.id.place_detail_place_visited_button);
+        detailPlaceVisitedButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                                                                @Override
+                                                                public void onCheckedChanged (CompoundButton buttonView,
+                                                                                              boolean isChecked) {
+                                                                    if (isChecked){
+                                                                        placeVisited = true;
+                                                                    } else {
+                                                                        placeVisited = false;
+                                                                    }
+                                                                }
+                                                            }
+                                                           );
+
         detailPlaceSaveButton = ( Button ) view.findViewById(R.id.place_detail_save_button);
 
 
-        getArgumentsFromBungle();
+        getArgumentsFromBundle();
 
         saveButtonSetUp();
 
@@ -88,7 +103,7 @@ public class PlaceDetailFragment extends Fragment {
     }
 
 
-    public void getArgumentsFromBungle () {
+    public void getArgumentsFromBundle () {
         if ( getArguments() != null ) {
             placeId = getArguments().getString("PlaceId");
             placeNameTitle = getArguments().getString("PlaceName");
@@ -109,7 +124,7 @@ public class PlaceDetailFragment extends Fragment {
     }
 
 
-    public void saveButtonSetUp() {
+    public void saveButtonSetUp () {
         detailPlaceSaveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick (View v) {
@@ -131,15 +146,8 @@ public class PlaceDetailFragment extends Fragment {
                     Log.e(TAG, "Notes are EMPTY");
                 }
 
-                if ( detailPlaceVisitedButton.isSelected() ) {
-                    placeVisited = detailPlaceVisitedButton.isSelected();
-                } else {
-                    placeVisited = false;
-                }
-
-
-                if (!isArgumentsEmpty && userCategoryAdded != false && userNotesAdded != false) {
-                    addPlaceDetailToRealmDB();
+                if ( !isArgumentsEmpty && userCategoryAdded != false && userNotesAdded != false ) {
+                    addPlaceDetailToRealmDB(placeVisited);
                 } else {
                     Toast.makeText(getActivity(), "Notes and Category cannot be empty", Toast.LENGTH_SHORT).show();
                     Log.e(TAG, "Notes and Category are EMPTY");
@@ -149,7 +157,8 @@ public class PlaceDetailFragment extends Fragment {
     }
 
 
-    public void addPlaceDetailToRealmDB () {
+    public void addPlaceDetailToRealmDB (boolean visited) {
+        final boolean pVisited = visited;
         realmObj = Realm.getDefaultInstance();
         realmObj.executeTransaction(new Realm.Transaction() {
             @Override
@@ -161,7 +170,7 @@ public class PlaceDetailFragment extends Fragment {
                 poi.setPlaceRating(placeRating);
                 poi.setmLatitude(placeLatitude);
                 poi.setmLongitude(placeLongitude);
-                poi.setmPlaceVisited(placeVisited);
+                poi.setmPlaceVisited(pVisited);
                 poi.setUserNotes(placeUserNotes);
                 poi.setmPlaceCategory(placeCategory);
             }
